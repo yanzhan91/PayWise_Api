@@ -3,21 +3,21 @@ from boto3.dynamodb.conditions import Key
 
 
 def handler(event, context):
-    print(event)
     try:
+        print(event)
         response = start_request(event)
+        print(response)
+        return response
     except Exception as e:
         print(e.args[0])
-        return e.args[0]
-    print(response)
-    return response
+        raise e
 
 
 def start_request(event):
     if 'user_id' not in event or not event['user_id']:
-        return generate_error_response(400, 'Missing user id in request')
+        raise Exception('Bad Request: Missing user id in request')
     if not event['domain'] and not event['name'] and not event['category']:
-        return generate_error_response(400, 'Missing one of domain, name, and category in request')
+        raise Exception('Bad Request: Missing one of domain, name, and category in request')
 
     user_id = event['user_id']
     store_name = ''
@@ -30,7 +30,7 @@ def start_request(event):
         category = event['category']
 
     if not category:
-        return generate_error_response(500, "Internal server error")
+        raise Exception('Internal Error: Cannot get category')
 
     card_list = get_users_cards(user_id)
     rewards = get_rewards(card_list, store_name, category)
@@ -96,12 +96,6 @@ def calc_rewards(card_info, store_name, category):
 
     return card_info
 
-
-def generate_error_response(status_code, message):
-    return {
-        'status_code': status_code,
-        'message': message
-    }
 
 if __name__ == '__main__':
     print(start_request({

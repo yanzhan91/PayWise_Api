@@ -3,26 +3,27 @@ from boto3.dynamodb.conditions import Key
 
 
 def handler(event, context):
-    print(event)
-    response = start_request(event)
-    print(response)
-    return response
+    try:
+        print(event)
+        response = start_request(event)
+        print(response)
+        return response
+    except Exception as e:
+        print(e.args[0])
+        raise e
 
 
 def start_request(event):
     if 'user_id' not in event:
-        return generate_response(400, 'No user_id found.')
+        raise Exception('Bad Request: No user_id found')
 
     if 'card_name' not in event:
-        return generate_response(400, 'No card_name found.')
+        raise Exception('Bad Request: No card_name found')
 
-    try:
-        card_id = get_card_id_from_name(event['card_name'])
-        add_card_id_to_user(event['user_id'], card_id)
-    except Exception as e:
-        return e.args[0]
+    card_id = get_card_id_from_name(event['card_name'])
+    add_card_id_to_user(event['user_id'], card_id)
 
-    return generate_response(200, 'Card added successfully')
+    return 'Card added successfully'
 
 
 def get_card_id_from_name(card_name):
@@ -33,7 +34,7 @@ def get_card_id_from_name(card_name):
         Limit=1
     )['Items']
     if not response:
-        raise Exception(generate_response(400, 'Cannot find card name: ' + card_name))
+        raise Exception('Bad Request: Cannot find card name in database: ' + card_name)
     return response[0]['card_id']
 
 
@@ -49,11 +50,4 @@ def add_card_id_to_user(user_id, card_id):
         }
     )['ResponseMetadata']
     if response['HTTPStatusCode'] != 200:
-        raise Exception(generate_response(500, 'Failed to update Users table'))
-
-
-def generate_response(status_code, message):
-    return {
-        'status_code': status_code,
-        'message': message
-    }
+        raise Exception('Internal Error: Failed to update Users table')
