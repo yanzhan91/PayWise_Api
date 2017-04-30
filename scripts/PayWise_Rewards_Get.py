@@ -22,12 +22,12 @@ def start_request(event):
     user_id = event['user_id']
     store_name = ''
     if event['name']:
-        store_name = event['name']
-        category = get_category_from_name(event['name'])
+        store_name = event['name'].lower()
+        category = get_category_from_name(store_name)
     elif event['domain']:
         store_name, category = get_name_and_category_from_domain(event['domain'])
     else:
-        category = event['category']
+        category = event['category'].upper()
 
     if not category:
         raise Exception('Internal Error: Cannot get category')
@@ -59,6 +59,8 @@ def get_category_from_name(name):
             'store_name': name
         }
     )
+    if 'Item' not in response:
+        raise Exception('Bad Request: name not found in database: ' + name)
     return response['Item']['store_category']
 
 
@@ -100,5 +102,7 @@ def calc_rewards(card_info, store_name, category):
 if __name__ == '__main__':
     print(start_request({
         'user_id': '10001',
-        'category': 'GROCERY'
+        'name': '',
+        "domain": "",
+        "category": "GROCERY"
     }))
