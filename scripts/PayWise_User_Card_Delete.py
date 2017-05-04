@@ -21,9 +21,9 @@ def start_request(event):
         raise Exception('Bad Request: No card_name found')
 
     card_id = get_card_id_from_name(event['card_name'].title())
-    add_card_id_to_user(event['user_id'], card_id)
+    delete_card_id_from_user(event['user_id'], card_id)
 
-    return 'Card added successfully'
+    return 'Card deleted successfully'
 
 
 def get_card_id_from_name(card_name):
@@ -38,16 +38,23 @@ def get_card_id_from_name(card_name):
     return response[0]['card_id']
 
 
-def add_card_id_to_user(user_id, card_id):
+def delete_card_id_from_user(user_id, card_id):
     user_table = boto3.resource('dynamodb').Table('PayWise_Users')
     response = user_table.update_item(
         Key={
             'user_id': user_id
         },
-        UpdateExpression='add card_ids :c',
+        UpdateExpression='delete card_ids :c',
         ExpressionAttributeValues={
             ':c': {card_id}
         }
     )['ResponseMetadata']
     if response['HTTPStatusCode'] != 200:
         raise Exception('Internal Error: Failed to update Users table')
+
+
+if __name__ == '__main__':
+    handler({
+        'user_id': '10001',
+        'card_name': 'Chase Freedom'
+    }, None)
