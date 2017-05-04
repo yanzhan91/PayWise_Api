@@ -91,7 +91,6 @@ def calc_rewards(card_info, store_name, category):
             rewards = card_info['rewards']['categories']['ALL']
 
     card_info['reward'] = float(rewards)
-    card_info['rewards_desc'] = list(card_info['rewards_desc'])
 
     del card_info['rewards']
     del card_info['card_id']
