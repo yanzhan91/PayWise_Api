@@ -50,7 +50,7 @@ def get_name_and_category_from_domain(domain):
         Limit=1
     )['Items']
     if not stores_items:
-        raise Exception({400, 'Invalid domain in request'})
+        raise Exception('Bad Request: Invalid domain in request')
     return stores_items[0]['store_name'], stores_items[0]['store_category']
 
 
