@@ -62,12 +62,12 @@ def get_attribute_value_list_with_key(table, attribute, user_id):
 def map_ids_to_card_name(card_id):
     table = boto3.resource('dynamodb').Table('PayWise_Cards')
     response = table.query(
-        ProjectionExpression='card_name',
+        ProjectionExpression='card_name,card_img,card_url',
         KeyConditionExpression=Key('card_id').eq(card_id),
         Limit=1
     )
     
-    return response['Items'][0]['card_name']
+    return response['Items'][0]
 
 
 if __name__ == '__main__':
