@@ -21,7 +21,7 @@ def start_request(event):
         return get_attribute_value_list(table, attribute)
     elif resource == 'store-names':
         table = 'PayWise_Stores'
-        attribute = 'store_name'
+        attribute = 'store_display_name'
         return get_attribute_value_list(table, attribute)
     elif resource == 'user-cards':
         table = 'PayWise_Users'
@@ -73,6 +73,6 @@ def map_ids_to_card_name(card_id):
 if __name__ == '__main__':
     handler({
         'method': 'get',
-        'resource': 'user-cards',
+        'resource': 'store-names',
         'user_id': '10001'
     }, None)

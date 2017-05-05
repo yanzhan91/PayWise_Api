@@ -24,7 +24,7 @@ def start_request(event):
     store_name = ''
     if event['name']:
         store_name = event['name'].lower()
-        store_name = re.sub('[^a-z0-9 ]', '', store_name)
+        store_name = re.sub('[^a-z0-9]', '', store_name)
         category = get_category_from_name(store_name)
     elif event['domain']:
         store_name, category = get_name_and_category_from_domain(event['domain'])
