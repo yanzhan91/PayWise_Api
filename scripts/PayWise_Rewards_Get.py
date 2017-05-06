@@ -66,7 +66,7 @@ def get_category_from_name(store_name):
 
 
 def find_existing_store_name(store_name, device):
-    if device is not 'Alexa':
+    if device != 'Alexa':
         return store_name
 
     store_table = boto3.resource('dynamodb').Table('PayWise_Stores')
@@ -81,7 +81,7 @@ def find_existing_store_name(store_name, device):
 
 
 def find_existing_category(store_category, device):
-    if device is not 'Alexa':
+    if device != 'Alexa':
         return store_category
 
     store_table = boto3.resource('dynamodb').Table('PayWise_Stores')
@@ -131,8 +131,9 @@ def calc_rewards(card_info, store_name, category):
 
 if __name__ == '__main__':
     print(start_request({
-        'user_id': '10001',
-        'name': 'taylor',
-        "domain": '',
-        "category": ''
+        "domain": "",
+        "name": "jewel osco",
+        "category": "",
+        "user_id": "10001",
+        "device": "Alexa"
     }))

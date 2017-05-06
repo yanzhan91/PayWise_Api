@@ -24,15 +24,15 @@ def start_request(event):
     if 'operation' not in event:
         raise Exception('Internal Error: No operation received')
 
-    card_name = find_existing_name(event['card_name'].title(), event['device'])
+    card_name = find_existing_card_name(event['card_name'].title(), event['device'])
     card_id = get_card_id_from_name(card_name)
     add_card_id_to_user(event['user_id'], card_id, event['operation'])
 
     return card_name
 
 
-def find_existing_name(card_name, device):
-    if device is not 'Alexa':
+def find_existing_card_name(card_name, device):
+    if device != 'Alexa':
         return card_name
 
     card_table = boto3.resource('dynamodb').Table('PayWise_Cards')
