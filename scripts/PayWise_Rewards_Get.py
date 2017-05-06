@@ -1,4 +1,4 @@
-import re
+import difflib
 import boto3
 from boto3.dynamodb.conditions import Key
 
@@ -23,13 +23,12 @@ def start_request(event):
     user_id = event['user_id']
     store_name = ''
     if event['name']:
-        store_name = event['name'].lower()
-        store_name = re.sub('[^a-z0-9]', '', store_name)
+        store_name = find_existing_store_name(event['name'], event['device'])
         category = get_category_from_name(store_name)
     elif event['domain']:
         store_name, category = get_name_and_category_from_domain(event['domain'])
     else:
-        category = event['category'].upper()
+        category = find_existing_category(event['category'].upper(), event['device'])
 
     if not category:
         raise Exception('Internal Error: Cannot get category')
@@ -54,16 +53,51 @@ def get_name_and_category_from_domain(domain):
     return stores_items[0]['store_name'], stores_items[0]['store_category']
 
 
-def get_category_from_name(name):
+def get_category_from_name(store_name):
     stores_table = boto3.resource('dynamodb').Table('PayWise_Stores')
     response = stores_table.get_item(
         Key={
-            'store_name': name
+            'store_name': store_name
         }
     )
     if 'Item' not in response:
-        raise Exception('Bad Request: name not found in database: ' + name)
+        raise Exception('Bad Request: Store name not found in database: ' + store_name)
     return response['Item']['store_category']
+
+
+def find_existing_store_name(store_name, device):
+    if device is not 'Alexa':
+        return store_name
+
+    store_table = boto3.resource('dynamodb').Table('PayWise_Stores')
+    response = store_table.scan(
+        ProjectionExpression='store_name'
+    )
+    all_stores = list(map(lambda x: x['store_name'], response['Items']))
+    store_names = difflib.get_close_matches(store_name, all_stores, 1)
+    if not store_names:
+        raise Exception('Bad Request: Store name not found in database: ' + store_name)
+    return store_names[0]
+
+
+def find_existing_category(store_category, device):
+    if device is not 'Alexa':
+        return store_category
+
+    store_table = boto3.resource('dynamodb').Table('PayWise_Stores')
+    response = store_table.scan(
+        ProjectionExpression='store_category'
+    )
+    all_store_categories = list(map(lambda x: x['store_category'], response['Items']))
+    store_categories = difflib.get_close_matches(store_category, all_store_categories, 1)
+    if not store_categories:
+        raise Exception('Bad Request: Store name not found in database: ' + store_category)
+    return store_categories[0]
+
+
+def get_users_cards(user_id):
+    user_table = boto3.resource('dynamodb').Table('PayWise_Users')
+    return user_table.get_item(Key={'user_id': user_id})['Item']['card_ids']
 
 
 def get_rewards(card_list, store_name, category):
@@ -74,11 +108,6 @@ def get_rewards(card_list, store_name, category):
 def get_card_info(card_id):
     card_table = boto3.resource('dynamodb').Table('PayWise_Cards')
     return card_table.get_item(Key={'card_id': card_id})['Item']
-
-
-def get_users_cards(user_id):
-    user_table = boto3.resource('dynamodb').Table('PayWise_Users')
-    return user_table.get_item(Key={'user_id': user_id})['Item']['card_ids']
 
 
 def calc_rewards(card_info, store_name, category):
@@ -92,7 +121,7 @@ def calc_rewards(card_info, store_name, category):
         else:
             rewards = card_info['rewards']['categories']['ALL']
 
-    card_info['reward'] = float(rewards)
+    card_info['reward'] = float(rewards) * 100
 
     del card_info['rewards']
     del card_info['card_id']
@@ -103,7 +132,7 @@ def calc_rewards(card_info, store_name, category):
 if __name__ == '__main__':
     print(start_request({
         'user_id': '10001',
-        'name': '',
-        "domain": "",
-        "category": "GROCERY"
+        'name': 'taylor',
+        "domain": '',
+        "category": ''
     }))
