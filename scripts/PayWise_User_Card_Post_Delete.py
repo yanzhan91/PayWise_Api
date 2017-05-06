@@ -21,9 +21,12 @@ def start_request(event):
     if 'card_name' not in event:
         raise Exception('Bad Request: No card_name found')
 
+    if 'operation' not in event:
+        raise Exception('Internal Error: No operation received')
+
     card_name = find_existing_name(event['card_name'].title())
     card_id = get_card_id_from_name(card_name)
-    add_card_id_to_user(event['user_id'], card_id)
+    add_card_id_to_user(event['user_id'], card_id, event['operation'])
 
     return card_name
 
@@ -53,13 +56,14 @@ def get_card_id_from_name(card_name):
     return response[0]['card_id']
 
 
-def add_card_id_to_user(user_id, card_id):
+def add_card_id_to_user(user_id, card_id, operation):
+    update_exp = operation + ' card_ids :c'
     user_table = boto3.resource('dynamodb').Table('PayWise_Users')
     response = user_table.update_item(
         Key={
             'user_id': user_id
         },
-        UpdateExpression='add card_ids :c',
+        UpdateExpression=update_exp,
         ExpressionAttributeValues={
             ':c': {card_id}
         }
@@ -71,5 +75,6 @@ def add_card_id_to_user(user_id, card_id):
 if __name__ == '__main__':
     print(start_request({
         'user_id': '10001',
-        'card_name': 'case freedom'
+        'card_name': 'cas free',
+        'operation': 'delete'
     }))
