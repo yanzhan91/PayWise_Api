@@ -25,10 +25,12 @@ def start_request(event):
         raise Exception('Internal Error: No operation received')
 
     card_name = find_existing_card_name(event['card_name'].title(), event['device'])
-    card_id = get_card_id_from_name(card_name)
-    add_card_id_to_user(event['user_id'], card_id, event['operation'])
+    card_info = get_card_info_from_name(card_name)
+    add_card_id_to_user(event['user_id'], card_info['card_id'], event['operation'])
 
-    return card_name
+    del card_info['card_id']
+
+    return card_info
 
 
 def find_existing_card_name(card_name, device):
@@ -46,17 +48,18 @@ def find_existing_card_name(card_name, device):
     return card_names[0]
 
 
-def get_card_id_from_name(card_name):
+def get_card_info_from_name(card_name):
     card_table = boto3.resource('dynamodb').Table('PayWise_Cards')
 
     response = card_table.query(
         IndexName='card_name-index',
         KeyConditionExpression=Key('card_name').eq(card_name),
+        ProjectionExpression='card_id,card_name,card_url,card_img',
         Limit=1
     )['Items']
     if not response:
         raise Exception('Bad Request: Cannot find card name in database: ' + card_name)
-    return response[0]['card_id']
+    return response[0]
 
 
 def add_card_id_to_user(user_id, card_id, operation):
@@ -78,6 +81,7 @@ def add_card_id_to_user(user_id, card_id, operation):
 if __name__ == '__main__':
     print(start_request({
         'user_id': '10001',
-        'card_name': 'cas free',
-        'operation': 'delete'
+        'card_name': 'Chase Freedom',
+        'operation': 'add',
+        'device': ''
     }))
