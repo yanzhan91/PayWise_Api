@@ -24,7 +24,7 @@ def start_request(event):
     if 'operation' not in event:
         raise Exception('Internal Error: No operation received')
 
-    card_name = find_existing_card_name(event['card_name'].title(), event['device'])
+    card_name = find_existing_card_name(event['card_name'], event['device'])
     card_info = get_card_info_from_name(card_name)
     add_card_id_to_user(event['user_id'], card_info['card_id'], event['operation'])
 
@@ -80,8 +80,8 @@ def add_card_id_to_user(user_id, card_id, operation):
 
 if __name__ == '__main__':
     print(start_request({
-        'user_id': '10001',
+        'user_id': '10010',
         'card_name': 'Chase Freedom',
         'operation': 'add',
-        'device': ''
+        'device': 'Alexa'
     }))

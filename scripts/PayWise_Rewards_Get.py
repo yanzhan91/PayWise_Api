@@ -97,7 +97,10 @@ def find_existing_category(store_category, device):
 
 def get_users_cards(user_id):
     user_table = boto3.resource('dynamodb').Table('PayWise_Users')
-    return user_table.get_item(Key={'user_id': user_id})['Item']['card_ids']
+    response = user_table.get_item(Key={'user_id': user_id})['Item']
+    if 'card_ids' not in response:
+        return {}
+    return response['card_ids']
 
 
 def get_rewards(card_list, store_name, category):
@@ -132,8 +135,8 @@ def calc_rewards(card_info, store_name, category):
 if __name__ == '__main__':
     print(start_request({
         "domain": "",
-        "name": "jewel osco",
+        "name": "amazon",
         "category": "",
-        "user_id": "10001",
+        "user_id": "10010",
         "device": "Alexa"
     }))
