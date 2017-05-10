@@ -45,7 +45,7 @@ def get_attribute_value_list(table, attribute):
 def get_user_cards(table, attribute, user_id):
     card_id_list = get_attribute_value_list_with_key(table, attribute, user_id)
     if not card_id_list:
-        raise Exception('Bad Request: User_id not found in database: ' + user_id)
+        return []
     return list(map(lambda x: map_ids_to_card_name(x), card_id_list[0]))
 
 
@@ -56,6 +56,10 @@ def get_attribute_value_list_with_key(table, attribute, user_id):
         KeyConditionExpression=Key('user_id').eq(user_id),
         Limit=1
     )
+
+    if not response['Items'] or not response['Items'][0]:
+        return []
+
     return list(map(lambda x: x[attribute], response['Items']))
 
 
@@ -73,6 +77,6 @@ def map_ids_to_card_name(card_id):
 if __name__ == '__main__':
     handler({
         'method': 'get',
-        'resource': 'store-names',
-        'user_id': '10001'
+        'resource': 'user-cards',
+        'user_id': '10005'
     }, None)
