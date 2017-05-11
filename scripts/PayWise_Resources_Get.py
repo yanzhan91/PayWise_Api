@@ -1,5 +1,6 @@
 import boto3
 from boto3.dynamodb.conditions import Key
+import time
 
 
 def handler(event, context):
@@ -23,6 +24,10 @@ def start_request(event):
         table = 'PayWise_Stores'
         attribute = 'store_display_name'
         return get_attribute_value_list(table, attribute)
+    elif resource == 'store-categories':
+        table = 'PayWise_Stores'
+        attribute = 'store_category'
+        return list(filter(lambda x: x != 'ALL', get_attribute_value_list(table, attribute)))
     elif resource == 'user-cards':
         table = 'PayWise_Users'
         attribute = 'card_ids'
@@ -39,7 +44,7 @@ def get_attribute_value_list(table, attribute):
     response = card_table.scan(
         ProjectionExpression=attribute
     )
-    return list(map(lambda x: x[attribute], response['Items']))
+    return list(set(map(lambda x: x[attribute], response['Items'])))
 
 
 def get_user_cards(table, attribute, user_id):
@@ -75,8 +80,10 @@ def map_ids_to_card_name(card_id):
 
 
 if __name__ == '__main__':
+    def current_milli_time(): return int(round(time.time() * 1000))
+    print(current_milli_time())
     handler({
-        'method': 'get',
-        'resource': 'user-cards',
+        'resource': 'store-categories',
         'user_id': '10005'
     }, None)
+    print(current_milli_time())
