@@ -11,7 +11,7 @@ def handler(event, context):
         return response
     except Exception as e:
         print(e.args[0])
-        raise e
+        return 200
 
 
 def start_request(event):
