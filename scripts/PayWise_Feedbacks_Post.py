@@ -16,18 +16,13 @@ def handler(event, context):
 
 def start_request(event):
     event['feedback_id'] = str(uuid.uuid4())
-
-    if not event['message']:
-        del event['message']
-
-    if not event['email']:
-        del event['email']
+    event['timestamp'] = time.strftime('%m-%d-%Y %H:%M:%S %Z')
 
     feedbacks_table = boto3.resource('dynamodb').Table('PayWise_Feedbacks')
-    response = feedbacks_table.put_item(
-        Item=event
+    feedbacks_table.put_item(
+        Item=dict((k, v) for k, v in event.items() if v)
     )
-    return response['ResponseMetadata']['HTTPStatusCode']
+    return 200
 
 
 if __name__ == '__main__':
