@@ -1,6 +1,7 @@
 import difflib
 import boto3
 from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Attr
 import time
 
 
@@ -109,22 +110,12 @@ def get_rewards(card_list, store_name, category):
     return list(map(lambda x: calc_rewards(x, store_name, category), card_list))
 
 
-def get_card_info(card_list):
+def get_card_info(card_ids):
     card_table = boto3.resource('dynamodb').Table('PayWise_Cards')
-    table_scan = card_table.scan()
-
-    card_map = {}
-    for item in table_scan['Items']:
-        card_map[item['card_id']] = item
-    result = []
-
-    try:
-        for card_id in card_list:
-            result.append(card_map[card_id])
-    except Exception:
-        raise Exception('Internal Error: Database data mismatch')
-
-    return result
+    response = card_table.scan(
+        FilterExpression=Attr('card_id').is_in(card_ids)
+    )
+    return response['Items']
 
 
 def calc_rewards(card_info, store_name, category):
