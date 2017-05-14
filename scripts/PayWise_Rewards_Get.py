@@ -1,6 +1,7 @@
 import difflib
 import boto3
 from boto3.dynamodb.conditions import Key
+import time
 
 
 def handler(event, context):
@@ -104,13 +105,26 @@ def get_users_cards(user_id):
 
 
 def get_rewards(card_list, store_name, category):
-    card_list = map(lambda x: get_card_info(x), card_list)
+    card_list = get_card_info(card_list)
     return list(map(lambda x: calc_rewards(x, store_name, category), card_list))
 
 
-def get_card_info(card_id):
+def get_card_info(card_list):
     card_table = boto3.resource('dynamodb').Table('PayWise_Cards')
-    return card_table.get_item(Key={'card_id': card_id})['Item']
+    table_scan = card_table.scan()
+
+    card_map = {}
+    for item in table_scan['Items']:
+        card_map[item['card_id']] = item
+    result = []
+
+    try:
+        for card_id in card_list:
+            result.append(card_map[card_id])
+    except Exception:
+        raise Exception('Internal Error: Database data mismatch')
+
+    return result
 
 
 def calc_rewards(card_info, store_name, category):
@@ -133,10 +147,13 @@ def calc_rewards(card_info, store_name, category):
 
 
 if __name__ == '__main__':
+    def current_milli_time(): return str(round(time.time() * 1000))
+    print('Total ' + str(current_milli_time()))
     print(start_request({
-        "domain": "",
-        "name": "amazon",
+        "domain": "amazon.com",
+        "name": "",
         "category": "",
-        "user_id": "10010",
-        "device": "Alexa"
+        "user_id": "a0b4b421-5b1a-5eff-fe6c-185ca84d8e0d",
+        "device": ""
     }))
+    print('Total ' + str(current_milli_time()))
