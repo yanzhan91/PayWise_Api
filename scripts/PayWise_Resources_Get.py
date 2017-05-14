@@ -1,5 +1,6 @@
 import boto3
 from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Attr
 import time
 
 
@@ -48,10 +49,10 @@ def get_attribute_value_list(table, attribute):
 
 
 def get_user_cards(table, attribute, user_id):
-    card_id_list = get_attribute_value_list_with_key(table, attribute, user_id)
-    if not card_id_list:
+    card_ids = get_attribute_value_list_with_key(table, attribute, user_id)
+    if not card_ids:
         return []
-    return list(map(lambda x: map_ids_to_card_name(x), card_id_list[0]))
+    return map_ids_to_card_name(card_ids)
 
 
 def get_attribute_value_list_with_key(table, attribute, user_id):
@@ -62,28 +63,25 @@ def get_attribute_value_list_with_key(table, attribute, user_id):
         Limit=1
     )
 
-    if not response['Items'] or not response['Items'][0]:
+    if not response['Items']:
         return []
 
-    return list(map(lambda x: x[attribute], response['Items']))
+    return response['Items'][0][attribute]
 
 
-def map_ids_to_card_name(card_id):
+def map_ids_to_card_name(card_ids):
     table = boto3.resource('dynamodb').Table('PayWise_Cards')
-    response = table.query(
-        ProjectionExpression='card_name,card_img,card_url',
-        KeyConditionExpression=Key('card_id').eq(card_id),
-        Limit=1
+    response = table.scan(
+        FilterExpression=Attr('card_id').is_in(card_ids)
     )
-    
-    return response['Items'][0]
+    return response['Items']
 
 
 if __name__ == '__main__':
     def current_milli_time(): return int(round(time.time() * 1000))
     print(current_milli_time())
     handler({
-        'resource': 'store-categories',
-        'user_id': '10005'
+        'resource': 'user-cards',
+        'user_id': 'a0b4b421-5b1a-5eff-fe6c-185ca84d8e0d'
     }, None)
     print(current_milli_time())
