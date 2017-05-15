@@ -63,7 +63,7 @@ def get_attribute_value_list_with_key(table, attribute, user_id):
         Limit=1
     )
 
-    if not response['Items']:
+    if not response['Items'] or attribute not in response['Items'][0]:
         return []
 
     return response['Items'][0][attribute]
@@ -83,6 +83,6 @@ if __name__ == '__main__':
     print(current_milli_time())
     handler({
         'resource': 'user-cards',
-        'user_id': 'a0b4b421-5b1a-5eff-fe6c-185ca84d8e0d'
+        'user_id': '10005'
     }, None)
     print(current_milli_time())
