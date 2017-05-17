@@ -36,6 +36,8 @@ def start_request(event):
         raise Exception('Internal Error: Cannot get category')
 
     card_list = get_users_cards(user_id)
+    if not card_list:
+        return {}
     rewards = get_rewards(card_list, store_name, category)
 
     rewards.sort(key=lambda x: x['reward'], reverse=True)
