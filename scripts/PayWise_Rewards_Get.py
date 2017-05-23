@@ -1,4 +1,6 @@
 import difflib
+import heapq
+import re
 import boto3
 from boto3.dynamodb.conditions import Key
 from boto3.dynamodb.conditions import Attr
@@ -76,7 +78,7 @@ def find_existing_store_name(store_name, device):
         ProjectionExpression='store_name'
     )
     all_stores = list(map(lambda x: x['store_name'], response['Items']))
-    store_names = difflib.get_close_matches(store_name, all_stores, 1)
+    store_names = get_match(store_name, all_stores)
     if not store_names:
         raise Exception('Bad Request: Store name not found in database: ' + store_name)
     return store_names[0]
@@ -90,8 +92,9 @@ def find_existing_category(store_category, device):
     response = store_table.scan(
         ProjectionExpression='store_category'
     )
+
     all_store_categories = list(map(lambda x: x['store_category'], response['Items']))
-    store_categories = difflib.get_close_matches(store_category, all_store_categories, 1)
+    store_categories = get_match(store_category, all_store_categories)
     if not store_categories:
         raise Exception('Bad Request: Store name not found in database: ' + store_category)
     return store_categories[0]
@@ -137,14 +140,27 @@ def calc_rewards(card_info, store_name, category):
     return card_info
 
 
+def get_match(word, possibilities, cutoff=0.6):
+    if not 0.0 <= cutoff <= 1:
+        raise ValueError("cutoff must be in [0.0, 1.0]: %r" % (cutoff,))
+    result = []
+    s = difflib.SequenceMatcher()
+    s.set_seq2(re.sub(r'[^A-Za-z0-9]', '', word).lower())
+    for x in possibilities:
+        s.set_seq1(re.sub(r'[^A-Za-z0-9]', '', x).lower())
+        if s.real_quick_ratio() >= cutoff and s.quick_ratio() >= cutoff and s.ratio() >= cutoff:
+            result.append((s.ratio(), x))
+    result = heapq.nlargest(1, result)
+    return [x for score, x in result]
+
+
 if __name__ == '__main__':
     def current_milli_time(): return str(round(time.time() * 1000))
-    print('Total ' + str(current_milli_time()))
     print(start_request({
-        "domain": "amazon.com",
-        "name": "",
+        "domain": "",
+        "name": "jewl oo",
         "category": "",
         "user_id": "a0b4b421-5b1a-5eff-fe6c-185ca84d8e0d",
-        "device": ""
+        "device": "Alexa"
     }))
     print('Total ' + str(current_milli_time()))

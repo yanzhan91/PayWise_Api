@@ -23,12 +23,12 @@ def start_request(event):
         return get_attribute_value_list(table, attribute)
     elif resource == 'store-names':
         table = 'PayWise_Stores'
-        attribute = 'store_display_name'
+        attribute = 'store_name'
         return get_attribute_value_list(table, attribute)
     elif resource == 'store-categories':
         table = 'PayWise_Stores'
         attribute = 'store_category'
-        return list(filter(lambda x: x != 'ALL', get_attribute_value_list(table, attribute)))
+        return list(filter(lambda x: x != 'ALL' and x != 'NA', get_attribute_value_list(table, attribute)))
     elif resource == 'user-cards':
         table = 'PayWise_Users'
         attribute = 'card_ids'
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     def current_milli_time(): return int(round(time.time() * 1000))
     print(current_milli_time())
     handler({
-        'resource': 'user-cards',
+        'resource': 'store-names',
         'user_id': '10005'
     }, None)
     print(current_milli_time())
