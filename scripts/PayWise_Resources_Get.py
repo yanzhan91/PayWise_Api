@@ -50,7 +50,7 @@ def get_attribute_value_list(table, attribute):
 def get_all_categories(table):
     card_table = boto3.resource('dynamodb').Table(table)
     response = card_table.scan()
-    category_set = {}
+    category_set = set()
     for card in response['Items']:
         for category in card['rewards']['categories']:
             if category != 'ALL':
