@@ -26,9 +26,8 @@ def start_request(event):
         attribute = 'store_name'
         return get_attribute_value_list(table, attribute)
     elif resource == 'store-categories':
-        table = 'PayWise_Stores'
-        attribute = 'store_category'
-        return list(filter(lambda x: x != 'ALL' and x != 'NA', get_attribute_value_list(table, attribute)))
+        table = 'PayWise_Cards'
+        return get_all_categories(table)
     elif resource == 'user-cards':
         table = 'PayWise_Users'
         attribute = 'card_ids'
@@ -46,6 +45,17 @@ def get_attribute_value_list(table, attribute):
         ProjectionExpression=attribute
     )
     return list(set(map(lambda x: x[attribute], response['Items'])))
+
+
+def get_all_categories(table):
+    card_table = boto3.resource('dynamodb').Table(table)
+    response = card_table.scan()
+    category_set = {}
+    for card in response['Items']:
+        for category in card['rewards']['categories']:
+            if category != 'ALL':
+                category_set.add(category)
+    return list(category_set)
 
 
 def get_user_cards(table, attribute, user_id):
