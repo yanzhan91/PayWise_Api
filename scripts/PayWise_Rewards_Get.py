@@ -90,15 +90,18 @@ def find_existing_category(store_category, device):
     if device != 'Alexa':
         return store_category
 
-    store_table = boto3.resource('dynamodb').Table('PayWise_Stores')
-    response = store_table.scan(
-        ProjectionExpression='store_category'
-    )
+    card_table = boto3.resource('dynamodb').Table('PayWise_Cards')
+    response = card_table.scan()
+    category_set = set()
+    for card in response['Items']:
+        for category in card['rewards']['categories']:
+            if category != 'ALL':
+                category_set.add(category)
 
-    all_store_categories = list(map(lambda x: x['store_category'], response['Items']))
-    store_categories = get_match(store_category, all_store_categories)
+    all_categories = list(category_set)
+    store_categories = get_match(store_category, all_categories)
     if not store_categories:
-        raise Exception('Bad Request: Store name not found in database: ' + store_category)
+        raise Exception('Bad Request: Category not found in database: ' + store_category)
     return store_categories[0]
 
 
@@ -159,10 +162,10 @@ def get_match(word, possibilities, cutoff=0.6):
 if __name__ == '__main__':
     def current_milli_time(): return str(round(time.time() * 1000))
     print(start_request({
-        "domain": "",
-        "name": "jewl oo",
-        "category": "",
-        "user_id": "a0b4b421-5b1a-5eff-fe6c-185ca84d8e0d",
+        "domain": "amazon.com",
+        "name": "",
+        "category": "movie",
+        "user_id": "10001",
         "device": "Alexa"
     }))
     print('Total ' + str(current_milli_time()))
